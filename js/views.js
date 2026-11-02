@@ -9,7 +9,7 @@
 
   const WICONS = ['💵', '🏦', '💳', '📱', '👛', '🏧', '💰', '🪙', '🐷', '💼'];
   const CICONS = ['🍜', '☕', '🚌', '⛽', '🛍️', '🧾', '🎬', '💊', '📚', '🏠', '👕', '🎮', '✈️', '🐾', '👶', '💡', '📞', '🎁', '💼', '🏪', '📈', '🎉', '💰', '📦'];
-  const PALETTE = ['#C9A227', '#7A5C12', '#E6CB6E', '#D98E3B', '#5F8D6A', '#B5655A', '#6B7FA8', '#9C7FB8', '#4E9AA6', '#A0A0A0'];
+  const PALETTE = ['#C9A227', '#E0533D', '#F2A541', '#3E7CC9', '#8E44AD', '#3FA7C6', '#D9578B', '#6FAE45', '#B5473A', '#4A6FA5', '#A06CC1', '#4DB6A4'];
 
   MM.short = (n) => {
     const a = Math.abs(n), s = n < 0 ? '-' : '';
@@ -61,12 +61,27 @@
 
   /* ---------- halaman ---------- */
   function vOnboard() {
-    return '<div class="onb">' + MM.logo(76) + '<h1>Selamat datang di <span>MoneyMe</span></h1>' +
-      '<p>Catat pemasukan &amp; pengeluaran dengan mudah. Tanpa daftar akun, tanpa internet. Semua data tersimpan hanya di perangkat ini.</p>' +
-      '<div class="card pad"><label class="lbl">Berapa uang tunai kamu sekarang? <span class="muted">(boleh dikosongkan)</span></label>' +
-      '<div class="amt"><span>Rp</span><input inputmode="numeric" autocomplete="off" data-in="amt" data-k="onb" placeholder="0" aria-label="Saldo awal tunai"></div></div>' +
-      '<button class="btn primary full big" data-act="onb-start">Mulai</button>' +
-      '<label class="link">Punya file backup? Pulihkan di sini<input type="file" accept=".json,application/json" hidden data-in="import"></label></div>';
+    const step = V.onbStep || 1;
+    const dots = '<div class="onb-dots" aria-label="Langkah ' + step + ' dari 2"><i class="' + (step === 1 ? 'on' : '') + '"></i><i class="' + (step === 2 ? 'on' : '') + '"></i></div>';
+    if (step === 1) {
+      return '<div class="onb">' + dots + MM.logo(64) + '<h1>Selamat datang di <span>MoneyMe</span> 👋</h1>' +
+        '<p>Ngatur duit itu bukan soal pelit, tapi biar hidup lebih tenang. Nggak perlu ribet, nggak perlu sampai burnout. Konsisten dikit-dikit, biar cepet kaya! 🚀</p>' +
+        '<ul class="onb-list">' +
+        '<li><span>💸</span><div><b>Tahu uangmu lari ke mana</b><small>Nggak ada lagi drama "kok saldo udah tipis?" di akhir bulan.</small></div></li>' +
+        '<li><span>🧘</span><div><b>Santai, anti burnout</b><small>Cukup 10 detik per catatan. Nggak harus sempurna, yang penting rutin.</small></div></li>' +
+        '<li><span>📈</span><div><b>Kebiasaan kecil, hasil besar</b><small>Langkah kecil hari ini, tabungan & mimpi besar nanti.</small></div></li></ul>' +
+        '<div class="card pad onb-form"><label class="lbl" for="onb-name">Nama panggilan</label>' +
+        '<input class="inp" id="onb-name" data-in="onb-name" maxlength="30" autocomplete="given-name" placeholder="Mas Bara" value="' + esc(V.onbName || '') + '">' +
+        '<label class="lbl" for="onb-job">Pekerjaan</label>' +
+        '<input class="inp" id="onb-job" data-in="onb-job" maxlength="40" autocomplete="organization-title" placeholder="CEO" value="' + esc(V.onbJob || '') + '"></div>' +
+        '<button class="btn primary full big" data-act="onb-next">Lanjut</button>' +
+        '<label class="link">Punya file backup? Pulihkan di sini<input type="file" accept=".json,application/json" hidden data-in="import"></label></div>';
+    }
+    return '<div class="onb">' + dots + '<div class="onb-hero">💛</div><h1>Tentang <span>MoneyMe</span></h1>' +
+      '<p>MoneyMe adalah aplikasi manajemen keuangan pribadi yang <b>100% gratis</b>. Tanpa iklan, tanpa daftar akun, bisa dipakai offline, dan semua data tersimpan aman di HP kamu sendiri.</p>' +
+      '<div class="onb-pray"><span>🤲</span><p>Nggak perlu bayar apa-apa, cukup <b>doain yang bikin sehat terus</b> aja ya!</p></div>' +
+      '<button class="btn primary full big" data-act="onb-start">Mulai Sekarang</button>' +
+      '<button class="link" data-act="onb-back">Kembali</button></div>';
   }
 
   function vHome() {
@@ -98,6 +113,19 @@
     return h;
   }
 
+  function groupedTx(list) {
+    const groups = [];
+    list.forEach((t) => {
+      const g = groups[groups.length - 1];
+      if (g && g.date === t.date) g.items.push(t); else groups.push({ date: t.date, items: [t] });
+    });
+    return groups.map((g) => {
+      const net = g.items.reduce((s, t) => s + (t.type === 'income' ? t.amount : t.type === 'expense' ? -t.amount : 0), 0);
+      return '<div class="day"><span>' + MM.dayLabel(g.date) + '</span><b class="' + (net > 0 ? 'in' : net < 0 ? 'out' : '') + '">' + (net > 0 ? '+' : '') + rp(net) + '</b></div>' +
+        '<div class="card">' + g.items.map((t) => txRow(t)).join('') + '</div>';
+    }).join('');
+  }
+
   function histList() {
     const q = V.hQ.trim().toLowerCase();
     let arr = MM.monthTx(V.hMonth).filter((t) => V.hType === 'all' || t.type === V.hType);
@@ -108,17 +136,7 @@
     if (!arr.length) return empty('🗒️', q || V.hType !== 'all' ? 'Tidak ada transaksi yang cocok.' : 'Belum ada transaksi di bulan ini.');
     MM.sortTx(arr);
     const shown = arr.slice(0, V.hLimit);
-    const groups = [];
-    shown.forEach((t) => {
-      const g = groups[groups.length - 1];
-      if (g && g.date === t.date) g.items.push(t); else groups.push({ date: t.date, items: [t] });
-    });
-    let h = '<p class="count">' + arr.length + ' transaksi</p>';
-    groups.forEach((g) => {
-      const net = g.items.reduce((s, t) => s + (t.type === 'income' ? t.amount : t.type === 'expense' ? -t.amount : 0), 0);
-      h += '<div class="day"><span>' + MM.dayLabel(g.date) + '</span><b class="' + (net > 0 ? 'in' : net < 0 ? 'out' : '') + '">' + (net > 0 ? '+' : '') + rp(net) + '</b></div>' +
-        '<div class="card">' + g.items.map((t) => txRow(t)).join('') + '</div>';
-    });
+    let h = '<p class="count">' + arr.length + ' transaksi</p>' + groupedTx(shown);
     if (arr.length > shown.length) h += '<button class="btn ghost full" data-act="h-more">Tampilkan lebih banyak</button>';
     return h;
   }
@@ -130,39 +148,81 @@
       '<div id="hist">' + histList() + '</div>';
   }
 
-  function vReport() {
-    const m = V.rMonth, sm = MM.summary(m), sp = MM.spentByCat(m);
-    const [y, mo] = m.split('-').map(Number);
-    const days = m === thisMonth() ? new Date().getDate() : new Date(y, mo, 0).getDate();
-    let h = monthNav('r') + '<div class="stats">' +
-      '<div class="stat"><small>Pemasukan</small><b class="in">' + rp(sm.income) + '</b></div>' +
-      '<div class="stat"><small>Pengeluaran</small><b class="out">' + rp(sm.expense) + '</b></div>' +
-      '<div class="stat wide"><small>Selisih bulan ini</small><b class="' + (sm.net >= 0 ? 'in' : 'out') + '">' + (sm.net > 0 ? '+' : '') + rp(sm.net) + '</b>' +
-      '<span class="muted">Rata-rata pengeluaran ' + rp(m > thisMonth() ? 0 : sm.expense / days) + '/hari</span></div></div>';
+  const daysIn = (m) => { const [y, mo] = m.split('-').map(Number); return new Date(y, mo, 0).getDate(); };
+  const activeDays = (m) => (m > thisMonth() ? 0 : m === thisMonth() ? new Date().getDate() : daysIn(m));
+  const rangeLabel = (m) => { const [y, mo] = m.split('-').map(Number); const ms = MM.MS[mo - 1]; return '01 ' + ms + ' ' + y + ' – ' + daysIn(m) + ' ' + ms + ' ' + y; };
+  const pctTxt = (p) => (p > 0 && p < 1 ? '<1' : Math.round(p)) + ' %';
+  function catTotals(m, type) {
+    const o = {};
+    for (const t of MM.monthTx(m)) if (t.type === type) o[t.categoryId] = (o[t.categoryId] || 0) + t.amount;
+    return Object.entries(o).map(([id, v]) => ({ id, c: MM.cat(id), v })).sort((a, b) => b.v - a.v);
+  }
+  const catName = (c) => (c ? c.icon + ' ' + c.name : '❔ Tanpa kategori');
 
-    const items = Object.entries(sp).map(([id, v]) => ({ c: MM.cat(id), v })).sort((a, b) => b.v - a.v);
-    h += sec('Pengeluaran per Kategori');
+  function reportChart(m) {
+    const sm = MM.summary(m), items = catTotals(m, 'expense');
+    let h = '';
     if (!items.length) h += empty('📊', 'Belum ada pengeluaran di bulan ini.');
     else {
-      const top = items.slice(0, 9);
-      if (items.length > 9) top.push({ c: { name: 'Lain-lain', icon: '•' }, v: items.slice(9).reduce((s, i) => s + i.v, 0) });
-      top.forEach((it, i) => (it.color = PALETTE[i % PALETTE.length]));
-      h += '<div class="card pad">' + MM.donut(top.map((i) => ({ value: i.v, color: i.color })), MM.short(sm.expense), 'Total') + '<div class="legend">' +
-        top.map((i) => '<div class="lg"><i style="background:' + i.color + '"></i><span>' + esc(i.c ? i.c.icon + ' ' + i.c.name : 'Tanpa kategori') + '</span><small>' +
-          Math.round((i.v / sm.expense) * 100) + '%</small><b>' + rp(i.v) + '</b></div>').join('') + '</div></div>';
+      items.forEach((it, i) => (it.color = PALETTE[i % PALETTE.length]));
+      h += '<div class="card pad">' + MM.donut(items.map((i) => ({ label: i.c ? i.c.name : 'Tanpa kategori', value: i.v, color: i.color })), MM.short(sm.expense), 'Total') +
+        '<div class="legend2">' + items.map((i) => '<button class="lgr" data-act="cat-detail" data-id="' + esc(i.id) + '"><span class="pct" style="background:' + i.color + '">' +
+          pctTxt((i.v / sm.expense) * 100) + '</span><span class="lgn">' + esc(catName(i.c)) + '</span><b>' + rp(i.v) + '</b>' + icon('next') + '</button>').join('') + '</div></div>';
     }
-
     const rows = [];
     for (let i = 5; i >= 0; i--) { const mm = MM.shiftMonth(m, -i), s = MM.summary(mm); rows.push({ label: MM.monthShort(mm), income: s.income, expense: s.expense, active: i === 0 }); }
     h += sec('Tren 6 Bulan') + '<div class="card pad">' + MM.bars(rows) +
       '<div class="keys"><span><i class="k-in"></i>Pemasukan</span><span><i class="k-out"></i>Pengeluaran</span></div></div>';
     return h;
   }
+  function catBars(m, type) {
+    const items = catTotals(m, type);
+    if (!items.length) return empty(type === 'expense' ? '🧾' : '💰', type === 'expense' ? 'Belum ada pengeluaran.' : 'Belum ada pemasukan.');
+    const max = items[0].v;
+    return '<div class="card">' + items.map((i) => '<button class="cb" data-act="cat-detail" data-id="' + esc(i.id) + '"><div class="cb-t"><span>' + esc(catName(i.c)) + '</span><b class="' +
+      (type === 'income' ? 'in' : '') + '">' + (type === 'income' ? '+' : '') + rp(i.v) + '</b>' + icon('next') + '</div><div class="cb-bar ' + type + '"><i style="width:' +
+      Math.max(2, (i.v / max) * 100).toFixed(1) + '%"></i></div></button>').join('') + '</div>';
+  }
+  function reportCats(m) {
+    const sm = MM.summary(m), d = activeDays(m);
+    const r = (l, v, cls, extra) => '<div class="sr' + (extra ? ' ' + extra : '') + '"><span>' + l + '</span><b class="' + (cls || '') + '">' + v + '</b></div>';
+    return '<div class="card pad sumtbl">' +
+      r('Pengeluaran', rp(sm.expense), 'out') + r('rata-rata harian', rp(d ? sm.expense / d : 0), '', 'sub') +
+      r('Pemasukan', '+' + rp(sm.income), 'in') + r('rata-rata harian', '+' + rp(d ? sm.income / d : 0), '', 'sub') +
+      r('Selisih', (sm.net > 0 ? '+' : '') + rp(sm.net), sm.net >= 0 ? 'in' : 'out', 'tot') + '</div>' +
+      sec('Pengeluaran per Kategori') + catBars(m, 'expense') + sec('Pemasukan per Kategori') + catBars(m, 'income');
+  }
+  function vReport() {
+    const m = V.rMonth, tab = V.rTab || 'chart';
+    return monthNav('r') + '<p class="range">' + rangeLabel(m) + '</p>' +
+      '<div class="seg"><button class="' + (tab === 'chart' ? 'on' : '') + '" data-act="r-tab" data-k="chart">Grafik</button><button class="' +
+      (tab === 'cat' ? 'on' : '') + '" data-act="r-tab" data-k="cat">Kategori</button></div>' +
+      (tab === 'chart' ? reportChart(m) : reportCats(m));
+  }
+
+  function vCatDetail() {
+    const id = V.detailCat, c = MM.cat(id), m = V.rMonth;
+    if (!id) { setTimeout(() => location.replace('#/report'), 0); return ''; }
+    const type = c ? c.type : 'expense';
+    const txs = MM.sortTx(MM.monthTx(m).filter((t) => t.categoryId === id || (!c && t.type === type && !MM.cat(t.categoryId))));
+    const total = txs.reduce((s, t) => s + t.amount, 0), all = MM.summary(m)[type];
+    let h = monthNav('r') + '<div class="card dhead"><div class="di">' + esc(c ? c.icon : '❔') + '</div><h2>' + esc(c ? c.name : 'Tanpa kategori') + '</h2>' +
+      '<b class="' + (type === 'income' ? 'in' : 'out') + '">' + (type === 'income' ? '+' : '') + rp(total) + '</b><small>' + txs.length + ' transaksi · ' +
+      (all ? pctTxt((total / all) * 100).replace(' ', '') : '0%') + ' dari total ' + (type === 'income' ? 'pemasukan' : 'pengeluaran') + ' · rata-rata ' +
+      rp(activeDays(m) ? total / activeDays(m) : 0) + '/hari</small></div>';
+    if (c && type === 'expense' && m === thisMonth()) h += sec('Budget') + '<div class="card">' + budgetRow(c, total) + '</div>';
+    h += sec('Transaksi');
+    h += txs.length ? groupedTx(txs) : empty('🗒️', 'Tidak ada transaksi kategori ini di ' + MM.monthLabel(m) + '.');
+    return h;
+  }
 
   function vMore() {
     const th = { system: 'Ikuti sistem', light: 'Terang', dark: 'Gelap' }[S.settings.theme || 'system'];
     const lb = S.settings.lastBackup;
-    return '<div class="group"><h3>Kelola</h3><div class="card">' +
+    const nm = S.settings.name || '';
+    return '<div class="group"><h3>Profil</h3><div class="card">' +
+      row('profile-open', '', '<span class="avatar">' + esc((nm || '?').charAt(0).toUpperCase()) + '</span>', esc(nm || 'Atur nama'), esc(S.settings.job || 'Pekerjaan belum diisi')) + '</div></div>' +
+      '<div class="group"><h3>Kelola</h3><div class="card">' +
       link('#/wallets', '👛', 'Dompet', MM.activeWallets().length + ' dompet aktif') +
       link('#/categories', '🏷️', 'Kategori', 'Atur kategori pemasukan & pengeluaran') +
       link('#/budgets', '🎯', 'Budget Bulanan', 'Batas pengeluaran per kategori') + '</div></div>' +
@@ -230,7 +290,8 @@
     wallets: { tab: 'more', title: 'Dompet', back: 1, view: vWallets },
     categories: { tab: 'more', title: 'Kategori', back: 1, view: vCategories },
     budgets: { tab: 'more', title: 'Budget Bulanan', back: 1, view: vBudgets },
-    backup: { tab: 'more', title: 'Backup & Pulihkan', back: 1, view: vBackup }
+    backup: { tab: 'more', title: 'Backup & Pulihkan', back: 1, view: vBackup },
+    catdetail: { tab: 'report', title: 'Detail Kategori', back: 1, parent: 'report', view: vCatDetail }
   };
   const route = () => { const r = (location.hash || '').replace(/^#\/?/, '') || 'home'; return ROUTES[r] ? r : 'home'; };
   const NAV = [['home', 'home', 'Beranda'], ['history', 'list', 'Riwayat'], ['report', 'chart', 'Laporan'], ['more', 'more', 'Lainnya']];
@@ -246,7 +307,7 @@
     document.body.classList.remove('onboard');
     const r = route(), R = ROUTES[r];
     top.innerHTML = r === 'home'
-      ? '<div class="bar brand">' + MM.logo(34) + '<div><h1>Money<span>Me</span></h1><small>' + MM.longDate() + '</small></div></div>'
+      ? '<div class="bar brand">' + MM.logo(34) + '<div>' + (S.settings.name ? '<h1>Halo, ' + esc(S.settings.name) + ' 👋</h1>' : '<h1>Money<span>Me</span></h1>') + '<small>' + MM.longDate() + '</small></div></div>'
       : '<div class="bar">' + (R.back ? '<button class="icon-btn" data-act="back" aria-label="Kembali">' + icon('back') + '</button>' : '') + '<h1>' + esc(R.title) + '</h1></div>';
     view.innerHTML = R.view();
     nav.innerHTML = NAV.map(([k, ic, l]) => '<a href="#/' + k + '" class="' + (R.tab === k ? 'on' : '') + '"' + (R.tab === k ? ' aria-current="page"' : '') + '>' + icon(ic) + '<span>' + l + '</span></a>').join('');
@@ -368,16 +429,39 @@
   const done = (msg) => { MM.closeSheet(); MM.render(); if (msg) MM.toast(msg); };
 
   H['sheet-close'] = () => MM.closeSheet();
-  H.back = () => { if (V.navd) history.back(); else location.hash = '#/more'; };
+  H.back = () => { const R = ROUTES[route()]; if (V.navd) history.back(); else location.hash = '#/' + (R.parent || 'more'); };
+  H['r-tab'] = (el) => { V.rTab = el.dataset.k; MM.render(); };
+  H['cat-detail'] = (el) => { V.detailCat = el.dataset.id; location.hash = '#/catdetail'; };
   H['m-shift'] = (el) => { const k = el.dataset.k; V[k + 'Month'] = MM.shiftMonth(V[k + 'Month'], +el.dataset.d); V.hLimit = 100; MM.render(); };
   H['h-type'] = (el) => { V.hType = el.dataset.k; V.hLimit = 100; MM.render(); };
   H['h-more'] = () => { V.hLimit += 100; $('#hist').innerHTML = histList(); };
 
+  H['onb-next'] = () => {
+    if (!(V.onbName || '').trim()) { MM.toast('Isi nama kamu dulu ya'); const n = $('#onb-name'); if (n) n.focus(); return; }
+    V.onbStep = 2; MM.render(); window.scrollTo(0, 0);
+  };
+  H['onb-back'] = () => { V.onbStep = 1; MM.render(); window.scrollTo(0, 0); };
   H['onb-start'] = async () => {
-    await MM.seed(V.onbAmt || 0);
+    const name = (V.onbName || '').trim();
+    await MM.seed({ name, job: (V.onbJob || '').trim() });
     location.hash = '#/home';
     MM.render();
-    MM.toast('Siap! Yuk catat transaksi pertamamu');
+    MM.toast('Siap, ' + name + '! Atur saldo awal di kartu Dompet ya');
+  };
+
+  H['profile-open'] = () => {
+    V.pf = { name: S.settings.name || '', job: S.settings.job || '' };
+    MM.openSheet(MM.sheetHead('Profil') +
+      '<label class="lbl" for="pf-name">Nama panggilan</label><input class="inp" id="pf-name" data-in="pf-name" maxlength="30" placeholder="Mas Bara" value="' + esc(V.pf.name) + '">' +
+      '<label class="lbl" for="pf-job">Pekerjaan</label><input class="inp" id="pf-job" data-in="pf-job" maxlength="40" placeholder="CEO" value="' + esc(V.pf.job) + '">' +
+      '<button class="btn primary full big" data-act="profile-save">Simpan</button>');
+  };
+  H['profile-save'] = async () => {
+    const name = V.pf.name.trim();
+    if (!name) return MM.toast('Nama wajib diisi');
+    await MM.set('name', name);
+    await MM.set('job', V.pf.job.trim());
+    done('Profil disimpan');
   };
 
   H['tx-new'] = () => openTx(null);
@@ -555,8 +639,12 @@
     const n = MM.parseAmt(el.value);
     el.value = n ? MM.num(n) : '';
     const k = el.dataset.k;
-    if (k === 'tx') V.tx.amount = n; else if (k === 'wd') V.wd.initialBalance = n; else if (k === 'bd') V.bd.amount = n; else if (k === 'onb') V.onbAmt = n;
+    if (k === 'tx') V.tx.amount = n; else if (k === 'wd') V.wd.initialBalance = n; else if (k === 'bd') V.bd.amount = n;
   };
+  IN['onb-name'] = (el) => (V.onbName = el.value);
+  IN['onb-job'] = (el) => (V.onbJob = el.value);
+  IN['pf-name'] = (el) => (V.pf.name = el.value);
+  IN['pf-job'] = (el) => (V.pf.job = el.value);
   IN['tx-wallet'] = (el) => (V.tx.walletId = el.value);
   IN['tx-to'] = (el) => (V.tx.toWalletId = el.value);
   IN['tx-date'] = (el) => (V.tx.date = el.value);

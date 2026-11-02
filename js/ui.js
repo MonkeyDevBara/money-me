@@ -61,16 +61,36 @@
 
   /* ---------- grafik ---------- */
   MM.donut = (items, center, sub) => {
+    // items: [{label, value, color}] — donut dengan label di luar + garis penghubung
+    const W = 360, H = 250, cx = 180, cy = 125, R = 80, sw = 34, r = R - sw / 2, C = 2 * Math.PI * r;
     const total = items.reduce((s, i) => s + i.value, 0) || 1;
+    const f2 = (n) => n.toFixed(2);
     let acc = 0;
-    const segs = items.map((i) => {
-      const p = (i.value / total) * 100;
-      const s = '<circle r="15.9155" cx="21" cy="21" fill="none" stroke="' + i.color + '" stroke-width="5.5" stroke-dasharray="' + p.toFixed(3) + ' ' + (100 - p).toFixed(3) + '" stroke-dashoffset="' + (25 - acc).toFixed(3) + '"/>';
-      acc += p;
-      return s;
+    const segs = [], labels = [];
+    items.forEach((it) => {
+      const f = it.value / total, start = acc;
+      acc += f;
+      const len = items.length > 1 ? Math.max(f * C - 1.2, 0.6) : C;
+      segs.push('<circle r="' + f2(r) + '" cx="' + cx + '" cy="' + cy + '" fill="none" stroke="' + it.color + '" stroke-width="' + sw +
+        '" stroke-dasharray="' + f2(len) + ' ' + f2(C) + '" stroke-dashoffset="' + f2(-start * C) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>');
+      const a = (start + f / 2) * 2 * Math.PI - Math.PI / 2, cos = Math.cos(a), sin = Math.sin(a);
+      labels.push({ it, right: cos >= 0, x0: cx + (R + 1) * cos, y0: cy + (R + 1) * sin, x1: cx + (R + 12) * cos, y: cy + (R + 12) * sin });
+    });
+    // atur jarak label per sisi supaya tidak bertumpuk
+    const GAP = 16, TOP = 10, BOT = H - 8;
+    [true, false].forEach((side) => {
+      const L = labels.filter((l) => l.right === side).sort((p, q) => p.y - q.y);
+      for (let i = 0; i < L.length; i++) L[i].y = Math.max(L[i].y, TOP, i ? L[i - 1].y + GAP : TOP);
+      for (let i = L.length - 1; i >= 0; i--) L[i].y = Math.min(L[i].y, i === L.length - 1 ? BOT : L[i + 1].y - GAP);
+    });
+    const labs = labels.map((l) => {
+      const xl = l.right ? cx + R + 24 : cx - R - 24;
+      const name = l.it.label.length > 11 ? l.it.label.slice(0, 10) + '…' : l.it.label;
+      return '<polyline points="' + f2(l.x0) + ',' + f2(l.y0) + ' ' + f2(l.x1) + ',' + f2(l.y) + ' ' + xl + ',' + f2(l.y) + '" fill="none" stroke="' + l.it.color + '" stroke-width="1.1"/>' +
+        '<text x="' + (xl + (l.right ? 4 : -4)) + '" y="' + f2(l.y + 4) + '" text-anchor="' + (l.right ? 'start' : 'end') + '" class="dl">' + esc(name) + '</text>';
     }).join('');
-    return '<div class="donut"><svg viewBox="0 0 42 42" role="img" aria-label="Grafik pengeluaran per kategori"><circle r="15.9155" cx="21" cy="21" fill="none" stroke="var(--soft)" stroke-width="5.5"/>' + segs +
-      '</svg><div class="donut-c"><small>' + esc(sub) + '</small><b>' + esc(center) + '</b></div></div>';
+    return '<svg class="donut2" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Grafik pengeluaran per kategori">' + segs.join('') + labs +
+      '<text x="' + cx + '" y="' + (cy - 5) + '" class="dc-s">' + esc(sub) + '</text><text x="' + cx + '" y="' + (cy + 15) + '" class="dc-b">' + esc(center) + '</text></svg>';
   };
   MM.bars = (rows) => {
     // rows: [{label, income, expense, active}]

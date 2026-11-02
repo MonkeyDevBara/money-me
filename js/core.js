@@ -112,12 +112,18 @@
   /* ---------- seed ---------- */
   const DEF_EXP = [['Makan', '🍜'], ['Transport', '🚌'], ['Belanja', '🛍️'], ['Tagihan', '🧾'], ['Hiburan', '🎬'], ['Kesehatan', '💊'], ['Pendidikan', '📚'], ['Rumah', '🏠'], ['Lainnya', '📦']];
   const DEF_INC = [['Gaji', '💼'], ['Bonus', '🎁'], ['Usaha', '🏪'], ['Hadiah', '🎉'], ['Lainnya', '💰']];
-  MM.seed = async (initial) => {
-    await MM.put('wallets', { id: MM.uid(), name: 'Tunai', icon: '💵', initialBalance: initial || 0, archived: false, createdAt: Date.now() });
-    const mk = (type) => ([name, icon]) => ({ id: MM.uid(), type, name, icon, archived: false });
+  MM.seed = async ({ name, job }) => {
+    const now = Date.now();
+    await replaceAll('wallets', [
+      { id: MM.uid(), name: 'Tunai', icon: '💵', initialBalance: 0, archived: false, createdAt: now },
+      { id: MM.uid(), name: 'Rekening', icon: '🏦', initialBalance: 0, archived: false, createdAt: now + 1 }
+    ]);
+    const mk = (type) => ([n, icon]) => ({ id: MM.uid(), type, name: n, icon, archived: false });
     await replaceAll('categories', DEF_EXP.map(mk('expense')).concat(DEF_INC.map(mk('income'))));
-    await MM.set('onboarded', true);
+    await MM.set('name', name || '');
+    await MM.set('job', job || '');
     await MM.set('theme', 'system');
+    await MM.set('onboarded', true);
   };
 
   /* ---------- query & hitung ---------- */
@@ -199,7 +205,7 @@
   MM.exportData = () => ({
     app: 'moneyme', version: 1, exportedAt: new Date().toISOString(),
     wallets: S.wallets, categories: S.categories, transactions: S.transactions, budgets: S.budgets,
-    settings: { theme: S.settings.theme || 'system' }
+    settings: { theme: S.settings.theme || 'system', name: S.settings.name || '', job: S.settings.job || '' }
   });
   MM.validateBackup = (d) => {
     if (!d || d.app !== 'moneyme') return 'Ini bukan file backup MoneyMe.';
@@ -223,6 +229,9 @@
     await replaceAll('transactions', d.transactions);
     await replaceAll('budgets', d.budgets);
     await MM.set('onboarded', true);
-    if (d.settings && d.settings.theme) await MM.set('theme', d.settings.theme);
+    const st = d.settings || {};
+    if (st.theme) await MM.set('theme', st.theme);
+    if (typeof st.name === 'string' && st.name) await MM.set('name', st.name.slice(0, 30));
+    if (typeof st.job === 'string') await MM.set('job', st.job.slice(0, 40));
   };
 })();
