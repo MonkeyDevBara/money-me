@@ -34,6 +34,9 @@
     }
   });
   window.addEventListener('hashchange', () => { MM.V.navd = true; MM.closeSheet(); MM.render(); });
+  // Chrome/Android: simpan prompt install agar bisa dipicu dari tombol "Pasang Sekarang"
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); MM.V.bip = e; });
+  window.addEventListener('appinstalled', () => { MM.V.bip = null; MM.toast('MoneyMe terpasang di layar utama 🎉'); });
 
   let hiddenAt = 0;
   document.addEventListener('visibilitychange', () => {

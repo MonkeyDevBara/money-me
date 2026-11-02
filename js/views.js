@@ -227,6 +227,7 @@
       link('#/categories', '🏷️', 'Kategori', 'Atur kategori pemasukan & pengeluaran') +
       link('#/budgets', '🎯', 'Budget Bulanan', 'Batas pengeluaran per kategori') + '</div></div>' +
       '<div class="group"><h3>Pengaturan</h3><div class="card">' +
+      row('install-open', '', '📲', 'Pasang di Layar Utama', MM.isInstalled() ? 'Sudah terpasang' : 'Biar bisa dibuka kayak aplikasi') +
       row('theme-open', '', '🌗', 'Tampilan', th) +
       row('pin-toggle', '', '🔒', 'Kunci PIN', S.settings.pinHash ? 'Aktif' : 'Nonaktif', '<span class="sw' + (S.settings.pinHash ? ' on' : '') + '"><i></i></span>') + '</div></div>' +
       '<div class="group"><h3>Data</h3><div class="card">' +
@@ -446,7 +447,56 @@
     await MM.seed({ name, job: (V.onbJob || '').trim() });
     location.hash = '#/home';
     MM.render();
-    MM.toast('Siap, ' + name + '! Atur saldo awal di kartu Dompet ya');
+    if (MM.isInstalled()) MM.toast('Siap, ' + name + '! Atur saldo awal di kartu Dompet ya');
+    else setTimeout(() => installSheet(true), 350);
+  };
+
+  /* ---------- tutorial pasang ke layar utama ---------- */
+  MM.isInstalled = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const kbd = (ic, label) => '<span class="kbd">' + icon(ic) + (label ? ' ' + label : '') + '</span>';
+  const steps = (list) => '<ol class="steps">' + list.map((s, i) => '<li><span class="stn">' + (i + 1) + '</span><p>' + s + '</p></li>').join('') + '</ol>';
+  function installBody() {
+    const tab = V.instTab || (isIOS() ? 'ios' : 'android');
+    let h = '<div class="seg"><button class="' + (tab === 'android' ? 'on' : '') + '" data-act="inst-tab" data-k="android">🤖 Android</button><button class="' +
+      (tab === 'ios' ? 'on' : '') + '" data-act="inst-tab" data-k="ios">🍎 iPhone</button></div>';
+    if (tab === 'android') {
+      if (V.bip) h += '<button class="btn primary full big" data-act="install-now">' + icon('addsq') + ' Pasang Sekarang</button><p class="hint center">Sekali ketuk, langsung terpasang. Atau ikuti cara manual di bawah:</p>';
+      h += steps([
+        'Buka MoneyMe di <b>Google Chrome</b>.',
+        'Ketuk tombol menu ' + kbd('dots') + ' di pojok <b>kanan atas</b>.',
+        'Pilih <b>"Tambahkan ke layar utama"</b> atau <b>"Instal aplikasi"</b>.',
+        'Ketuk <b>"Instal"</b> / <b>"Tambah"</b> untuk konfirmasi.',
+        'Selesai! Buka MoneyMe dari ikon ' + MM.logo(20) + ' di layar utama HP kamu.'
+      ]) + '<p class="hint">Pakai Samsung Internet? Ketuk menu <b>≡</b> → <b>Tambahkan halaman ke</b> → <b>Layar Utama</b>.</p>';
+    } else {
+      h += steps([
+        'Buka MoneyMe di <b>Safari</b> (browser bawaan iPhone).',
+        'Ketuk tombol <b>Bagikan</b> ' + kbd('share') + ' di bagian <b>bawah</b> layar.',
+        'Geser ke bawah, lalu pilih ' + kbd('addsq', 'Tambah ke Layar Utama') + '.',
+        'Ketuk <b>"Tambah"</b> di pojok kanan atas.',
+        'Selesai! Buka MoneyMe dari ikon ' + MM.logo(20) + ' di layar utama iPhone kamu.'
+      ]) + '<p class="hint">Pakai Chrome di iPhone? Ketuk ' + kbd('share') + ' di kanan atas kolom alamat, lalu pilih <b>Tambah ke Layar Utama</b>.</p>';
+    }
+    return h;
+  }
+  function installSheet(first) {
+    const intro = '<div class="inst-intro"><span>📲</span><div><b>MoneyMe adalah web app</b><small>Nggak perlu download di Play Store atau App Store. Cukup pasang ke layar utama, ' +
+      'nanti bisa dibuka kayak aplikasi biasa, bahkan tanpa internet.</small></div></div>';
+    MM.openSheet(MM.sheetHead(first ? 'Satu langkah lagi! 🎉' : 'Pasang di Layar Utama') + intro +
+      (MM.isInstalled() ? '<div class="empty"><span>✅</span><p>MoneyMe sudah terpasang di layar utama perangkat ini.</p></div>' : '<div id="inst-body">' + installBody() + '</div>') +
+      '<button class="btn ' + (first ? 'ghost' : 'primary') + ' full" data-act="sheet-close">' + (first ? 'Nanti saja' : 'Oke, mengerti') + '</button>');
+  }
+  H['install-open'] = () => installSheet(false);
+  H['inst-tab'] = (el) => { V.instTab = el.dataset.k; const b = $('#inst-body'); if (b) b.innerHTML = installBody(); };
+  H['install-now'] = async () => {
+    const e = V.bip;
+    if (!e) return;
+    V.bip = null;
+    e.prompt();
+    const r = await e.userChoice.catch(() => ({}));
+    if (r.outcome === 'accepted') { MM.closeSheet(); MM.toast('MoneyMe sedang dipasang 🎉'); }
+    else { const b = $('#inst-body'); if (b) b.innerHTML = installBody(); }
   };
 
   H['profile-open'] = () => {
