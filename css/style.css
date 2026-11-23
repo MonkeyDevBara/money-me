@@ -196,6 +196,7 @@ input[type=date].inp { -webkit-appearance: none; appearance: none; display: flex
 .amt:focus-within { border-color: var(--gold); }
 .amt span { color: var(--muted); font-weight: 700; font-size: 18px; }
 .amt input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font-size: 22px; font-weight: 700; height: 100%; }
+.amt input:disabled { color: var(--muted); -webkit-text-fill-color: var(--muted); opacity: 1; }
 .amt.big { height: 70px; margin-top: 14px; border-color: var(--gold-l); background: var(--soft); }
 .amt.big input { font-size: 30px; }
 .amt.expense input { color: var(--exp); } .amt.income input { color: var(--inc); } .amt.transfer input { color: var(--gold-d); }

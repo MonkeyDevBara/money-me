@@ -96,7 +96,7 @@
     }
 
     h += sec('Dompet', 'Kelola', '#/wallets') + '<div class="wallets">' +
-      ws.map((w) => '<button class="wcard" data-act="wallet-edit" data-id="' + esc(w.id) + '"><span>' + esc(w.icon) + '</span><small>' + esc(w.name) + '</small><b>' + rp(bal[w.id]) + '</b></button>').join('') +
+      ws.map((w) => '<button class="wcard" data-act="wallet-edit" data-src="home" data-id="' + esc(w.id) + '"><span>' + esc(w.icon) + '</span><small>' + esc(w.name) + '</small><b>' + rp(bal[w.id]) + '</b></button>').join('') +
       '<button class="wcard add" data-act="wallet-new"><span>＋</span><small>Tambah</small><b>Dompet</b></button></div>';
 
     const sp = MM.spentByCat(m);
@@ -364,14 +364,17 @@
 
   /* ---------- sheet: dompet / kategori / budget / tema ---------- */
   const emojiGrid = (k, list, sel) => '<div class="emojis">' + list.map((e) => '<button class="emo' + (e === sel ? ' on' : '') + '" data-act="pick-emo" data-k="' + k + '" data-e="' + e + '">' + e + '</button>').join('') + '</div>';
-  function walletSheet(w) {
+  function walletSheet(w, fromHome) {
     V.wd = w ? Object.assign({}, w) : { name: '', icon: '🏦', initialBalance: 0 };
     const d = V.wd;
     MM.openSheet(MM.sheetHead(w ? 'Ubah Dompet' : 'Tambah Dompet') +
       '<label class="lbl">Nama dompet</label><input class="inp" data-in="wd-name" maxlength="30" placeholder="mis. BCA, GoPay, Tabungan" value="' + esc(d.name) + '">' +
       '<label class="lbl">Ikon</label>' + emojiGrid('wd', WICONS, d.icon) +
-      '<label class="lbl">Saldo awal</label><div class="amt"><span>Rp</span><input inputmode="numeric" autocomplete="off" placeholder="0" data-in="amt" data-k="wd" value="' + (d.initialBalance ? MM.num(d.initialBalance) : '') + '"></div>' +
-      '<p class="hint">Saldo awal = jumlah uang di dompet ini sebelum mulai mencatat.</p>' +
+      (w && fromHome && S.transactions.length
+        ? '<label class="lbl">Saldo awal</label><div class="amt"><span>Rp</span><input disabled value="' + MM.num(d.initialBalance || 0) + '" aria-label="Saldo awal (terkunci)"></div>' +
+          '<p class="hint">Saldo awal terkunci karena kamu sudah mulai mencatat, supaya tidak tertukar dengan pemasukan. Untuk mengubahnya, buka <b>Lainnya › Dompet</b>.</p>'
+        : '<label class="lbl">Saldo awal</label><div class="amt"><span>Rp</span><input inputmode="numeric" autocomplete="off" placeholder="0" data-in="amt" data-k="wd" value="' + (d.initialBalance ? MM.num(d.initialBalance) : '') + '"></div>' +
+          '<p class="hint">Saldo awal = jumlah uang di dompet ini sebelum mulai mencatat.</p>') +
       '<button class="btn primary full big" data-act="wallet-save">Simpan</button>' +
       (w ? (w.archived ? '<button class="btn ghost full" data-act="wallet-arch">Aktifkan kembali</button>'
         : '<button class="btn ghost full danger-t" data-act="wallet-del">' + (MM.walletUsed(w.id) ? 'Arsipkan dompet' : 'Hapus dompet') + '</button>') : ''));
@@ -564,7 +567,7 @@
   };
 
   H['wallet-new'] = () => walletSheet(null);
-  H['wallet-edit'] = (el) => { const w = MM.wallet(el.dataset.id); if (w) walletSheet(w); };
+  H['wallet-edit'] = (el) => { const w = MM.wallet(el.dataset.id); if (w) walletSheet(w, el.dataset.src === 'home'); };
   H['wallet-save'] = async () => {
     const d = V.wd, name = (d.name || '').trim();
     if (!name) return MM.toast('Nama dompet wajib diisi');
