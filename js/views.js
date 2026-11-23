@@ -58,6 +58,7 @@
   const row = (act, id, ic, title, sub, right) => '<button class="row" data-act="' + act + '"' + (id ? ' data-id="' + esc(id) + '"' : '') + '><span class="row-ic">' + ic +
     '</span><span class="row-t">' + title + (sub ? '<small>' + sub + '</small>' : '') + '</span>' + (right != null ? right : icon('next')) + '</button>';
   const link = (href, ic, title, sub) => '<a class="row" href="' + href + '"><span class="row-ic">' + ic + '</span><span class="row-t">' + title + (sub ? '<small>' + sub + '</small>' : '') + '</span>' + icon('next') + '</a>';
+  const avatar = (nm, photo) => '<span class="avatar">' + (photo ? '<img src="' + esc(photo) + '" alt="">' : esc((nm || '?').charAt(0).toUpperCase())) + '</span>';
 
   /* ---------- halaman ---------- */
   function vOnboard() {
@@ -221,7 +222,7 @@
     const lb = S.settings.lastBackup;
     const nm = S.settings.name || '';
     return '<div class="group"><h3>Profil</h3><div class="card">' +
-      row('profile-open', '', '<span class="avatar">' + esc((nm || '?').charAt(0).toUpperCase()) + '</span>', esc(nm || 'Atur nama'), esc(S.settings.job || 'Pekerjaan belum diisi')) + '</div></div>' +
+      row('profile-open', '', avatar(nm, S.settings.photo), esc(nm || 'Atur nama'), esc(S.settings.job || 'Pekerjaan belum diisi')) + '</div></div>' +
       '<div class="group"><h3>Kelola</h3><div class="card">' +
       link('#/wallets', '👛', 'Dompet', MM.activeWallets().length + ' dompet aktif') +
       link('#/categories', '🏷️', 'Kategori', 'Atur kategori pemasukan & pengeluaran') +
@@ -502,18 +503,25 @@
     else { const b = $('#inst-body'); if (b) b.innerHTML = installBody(); }
   };
 
+  const pfPhotoBlock = () => '<div class="pf-photo">' + avatar(V.pf.name.trim(), V.pf.photo) + '</div>' +
+    '<div class="pf-photo-btns"><label class="btn ghost">' + (V.pf.photo ? 'Ganti Foto' : 'Pilih Foto') +
+    '<input type="file" accept="image/*" hidden data-in="pf-photo"></label>' +
+    (V.pf.photo ? '<button class="btn ghost danger-t" data-act="pf-photo-del">Hapus</button>' : '') + '</div>';
   H['profile-open'] = () => {
-    V.pf = { name: S.settings.name || '', job: S.settings.job || '' };
+    V.pf = { name: S.settings.name || '', job: S.settings.job || '', photo: S.settings.photo || '' };
     MM.openSheet(MM.sheetHead('Profil') +
+      '<div id="pf-photo-block" class="pf-photo-block">' + pfPhotoBlock() + '</div>' +
       '<label class="lbl" for="pf-name">Nama panggilan</label><input class="inp" id="pf-name" data-in="pf-name" maxlength="30" placeholder="Mas Bara" value="' + esc(V.pf.name) + '">' +
       '<label class="lbl" for="pf-job">Pekerjaan</label><input class="inp" id="pf-job" data-in="pf-job" maxlength="40" placeholder="CEO" value="' + esc(V.pf.job) + '">' +
       '<button class="btn primary full big" data-act="profile-save">Simpan</button>');
   };
+  H['pf-photo-del'] = () => { V.pf.photo = ''; $('#pf-photo-block').innerHTML = pfPhotoBlock(); };
   H['profile-save'] = async () => {
     const name = V.pf.name.trim();
     if (!name) return MM.toast('Nama wajib diisi');
     await MM.set('name', name);
     await MM.set('job', V.pf.job.trim());
+    if (V.pf.photo) await MM.set('photo', V.pf.photo); else await MM.unset('photo');
     done('Profil disimpan');
   };
 
@@ -698,6 +706,14 @@
   IN['onb-job'] = (el) => (V.onbJob = el.value);
   IN['pf-name'] = (el) => (V.pf.name = el.value);
   IN['pf-job'] = (el) => (V.pf.job = el.value);
+  IN['pf-photo'] = async (el) => {
+    const f = el.files && el.files[0];
+    if (!f) return;
+    try {
+      V.pf.photo = await MM.photoFromFile(f);
+      $('#pf-photo-block').innerHTML = pfPhotoBlock();
+    } catch (e) { MM.toast('Foto tidak bisa dibuka, coba foto lain'); }
+  };
   IN['tx-wallet'] = (el) => (V.tx.walletId = el.value);
   IN['tx-to'] = (el) => (V.tx.toWalletId = el.value);
   IN['tx-date'] = (el) => (V.tx.date = el.value);

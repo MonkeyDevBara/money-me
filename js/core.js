@@ -205,7 +205,7 @@
   MM.exportData = () => ({
     app: 'moneyme', version: 1, exportedAt: new Date().toISOString(),
     wallets: S.wallets, categories: S.categories, transactions: S.transactions, budgets: S.budgets,
-    settings: { theme: S.settings.theme || 'system', name: S.settings.name || '', job: S.settings.job || '' }
+    settings: { theme: S.settings.theme || 'system', name: S.settings.name || '', job: S.settings.job || '', photo: S.settings.photo || '' }
   });
   MM.validateBackup = (d) => {
     if (!d || d.app !== 'moneyme') return 'Ini bukan file backup MoneyMe.';
@@ -233,5 +233,21 @@
     if (st.theme) await MM.set('theme', st.theme);
     if (typeof st.name === 'string' && st.name) await MM.set('name', st.name.slice(0, 30));
     if (typeof st.job === 'string') await MM.set('job', st.job.slice(0, 40));
+    if (typeof st.photo === 'string' && st.photo.length < 400000 && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(st.photo)) await MM.set('photo', st.photo);
   };
+
+  /* Foto profil: dipotong persegi & diperkecil 256px, disimpan sebagai data URL di IndexedDB (lokal) */
+  MM.photoFromFile = (file) => new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const n = 256, side = Math.min(img.naturalWidth, img.naturalHeight);
+      if (!side) { URL.revokeObjectURL(url); return reject(new Error('empty')); }
+      const c = document.createElement('canvas'); c.width = c.height = n;
+      c.getContext('2d').drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, n, n);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode')); };
+    img.src = url;
+  });
 })();
