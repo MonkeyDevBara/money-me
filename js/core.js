@@ -1,4 +1,4 @@
-/* MoneyMe — core: util, IndexedDB, state, perhitungan */
+/* MoneyBos — core: util, IndexedDB, state, perhitungan */
 (function () {
   'use strict';
   const MM = (window.MM = { V: {} });
@@ -58,7 +58,7 @@
       };
       r.onsuccess = () => res(r.result);
       r.onerror = () => rej(r.error || new Error('Gagal membuka penyimpanan.'));
-      r.onblocked = () => rej(new Error('Penyimpanan terblokir. Tutup tab MoneyMe lain.'));
+      r.onblocked = () => rej(new Error('Penyimpanan terblokir. Tutup tab MoneyBos lain.'));
     });
   }
   function run(store, mode, fn) {
@@ -110,7 +110,7 @@
   };
 
   /* ---------- seed ---------- */
-  const DEF_EXP = [['Makan', '🍜'], ['Transport', '🚌'], ['Belanja', '🛍️'], ['Tagihan', '🧾'], ['Hiburan', '🎬'], ['Kesehatan', '💊'], ['Pendidikan', '📚'], ['Rumah', '🏠'], ['Lainnya', '📦']];
+  const DEF_EXP = [['Makan', '🍜'], ['Kopi', '☕'], ['Jajan', '🍿'], ['Transport', '🚌'], ['Belanja', '🛍️'], ['Tagihan', '🧾'], ['Hiburan', '🎬'], ['Kesehatan', '💊'], ['Pendidikan', '📚'], ['Rumah', '🏠'], ['Lainnya', '📦']];
   const DEF_INC = [['Gaji', '💼'], ['Bonus', '🎁'], ['Usaha', '🏪'], ['Hadiah', '🎉'], ['Lainnya', '💰']];
   MM.seed = async ({ name, job }) => {
     const now = Date.now();
@@ -208,7 +208,7 @@
     settings: { theme: S.settings.theme || 'system', name: S.settings.name || '', job: S.settings.job || '' }
   });
   MM.validateBackup = (d) => {
-    if (!d || d.app !== 'moneyme') return 'Ini bukan file backup MoneyMe.';
+    if (!d || d.app !== 'moneyme') return 'Ini bukan file backup MoneyBos.';
     for (const k of ['wallets', 'categories', 'transactions', 'budgets']) if (!Array.isArray(d[k])) return 'File backup rusak (data ' + k + ' tidak ada).';
     if (!d.wallets.length) return 'File backup tidak berisi dompet.';
     const ids = new Set(d.wallets.map((w) => w.id));

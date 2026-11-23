@@ -1,4 +1,4 @@
-/* MoneyMe — tema putih dengan aksen (lis) gold */
+/* MoneyBos — tema putih dengan aksen (lis) gold */
 :root {
   --bg: #FFFFFF; --surface: #FFFFFF; --soft: #FBF7EA; --soft2: #F6EED3;
   --gold: #C9A227; --gold-d: #9A7A0E; --gold-l: #EBD98A; --line: #EFE4BF;
@@ -56,6 +56,18 @@ h1, h2, h3, p { margin: 0; }
 .fab .ic { width: 28px; height: 28px; stroke-width: 2.6; }
 .fab:active { transform: scale(.94); }
 body.onboard #app { padding-bottom: 24px; }
+
+/* tombol & tarik-untuk-muat-ulang */
+html, body { overscroll-behavior-y: contain; }
+.bar .icon-btn.refresh { margin-left: auto; margin-right: -8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+body.refreshing .refresh .ic, #ptr.spin .ic { animation: spin .8s linear infinite; }
+#ptr { position: fixed; top: env(safe-area-inset-top); left: 50%; z-index: 40; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; pointer-events: none;
+  background: var(--surface); color: var(--gold-d); border: 1.5px solid var(--gold); box-shadow: var(--shadow), 0 2px 10px rgba(0, 0, 0, .12);
+  transform: translate(-50%, -60px); opacity: 0; transition: transform .2s, opacity .2s; }
+#ptr.drag { transition: none; }
+#ptr.ready { background: var(--soft2); }
+#ptr .ic { width: 22px; height: 22px; }
 
 /* hero saldo */
 .hero { margin-top: 12px; padding: 20px; border-radius: 20px; background: var(--hero); color: #fff; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(154, 122, 14, .25); }

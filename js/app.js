@@ -1,4 +1,4 @@
-/* MoneyMe — inisialisasi & event global */
+/* MoneyBos — inisialisasi & event global */
 (function () {
   'use strict';
   const MM = window.MM, S = MM.S;
@@ -36,7 +36,7 @@
   window.addEventListener('hashchange', () => { MM.V.navd = true; MM.closeSheet(); MM.render(); });
   // Chrome/Android: simpan prompt install agar bisa dipicu dari tombol "Pasang Sekarang"
   window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); MM.V.bip = e; });
-  window.addEventListener('appinstalled', () => { MM.V.bip = null; MM.toast('MoneyMe terpasang di layar utama 🎉'); });
+  window.addEventListener('appinstalled', () => { MM.V.bip = null; MM.toast('MoneyBos terpasang di layar utama 🎉'); });
 
   let hiddenAt = 0;
   document.addEventListener('visibilitychange', () => {
@@ -44,11 +44,45 @@
     else if (hiddenAt && Date.now() - hiddenAt > 60000 && S.settings.pinHash && !MM.V.locked) MM.lock();
   });
 
+  /* tarik ke bawah (dari paling atas) untuk muat ulang */
+  const ptr = document.getElementById('ptr');
+  ptr.innerHTML = MM.icon('refresh');
+  const PULL_GO = 64, PULL_MAX = 96;
+  let py = 0, px = 0, pd = 0, pulling = false;
+  const ptrBlocked = () => MM.V.locked || document.body.classList.contains('noscroll') || !!document.getElementById('dialog').firstChild;
+  const showPull = (d) => {
+    ptr.style.transform = 'translate(-50%, ' + (d - 44) + 'px)';
+    ptr.style.opacity = Math.min(1, d / PULL_GO);
+    ptr.firstChild.style.transform = 'rotate(' + d * 4 + 'deg)';
+    ptr.classList.toggle('ready', d >= PULL_GO);
+  };
+  const hidePull = () => { pd = 0; ptr.classList.remove('drag', 'ready'); ptr.style.transform = ptr.style.opacity = ptr.firstChild.style.transform = ''; };
+  document.addEventListener('touchstart', (e) => {
+    pulling = e.touches.length === 1 && window.scrollY <= 0 && !ptrBlocked() && !document.body.classList.contains('refreshing');
+    if (pulling) { py = e.touches[0].clientY; px = e.touches[0].clientX; pd = 0; }
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!pulling) return;
+    const t = e.touches[0], dy = t.clientY - py;
+    if (dy <= 0 || window.scrollY > 0 || (pd === 0 && Math.abs(t.clientX - px) > dy)) { pulling = false; hidePull(); return; }
+    pd = Math.min(PULL_MAX, dy * 0.5);
+    ptr.classList.add('drag');
+    if (e.cancelable) e.preventDefault();
+    showPull(pd);
+  }, { passive: false });
+  document.addEventListener('touchend', () => {
+    if (!pulling) return;
+    pulling = false;
+    if (pd >= PULL_GO) { ptr.classList.remove('drag'); ptr.classList.add('spin'); showPull(PULL_GO); MM.refresh(); }
+    else hidePull();
+  });
+  document.addEventListener('touchcancel', () => { pulling = false; hidePull(); });
+
   (async function init() {
     try {
       await MM.load();
     } catch (err) {
-      document.getElementById('view').innerHTML = '<div class="empty"><span>⚠️</span><p><b>MoneyMe tidak bisa membuka penyimpanan.</b><br>' + MM.esc(err.message) +
+      document.getElementById('view').innerHTML = '<div class="empty"><span>⚠️</span><p><b>MoneyBos tidak bisa membuka penyimpanan.</b><br>' + MM.esc(err.message) +
         '<br><br>Pastikan tidak memakai mode penyamaran/private, lalu muat ulang halaman.</p></div>';
       return;
     }
