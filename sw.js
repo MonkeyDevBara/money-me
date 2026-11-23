@@ -1,5 +1,5 @@
 /* MoneyBos service worker — cache-first agar 100% offline */
-const CACHE = 'moneybos-v7';
+const CACHE = 'moneybos-v8';
 const ASSETS = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/core.js', 'js/ui.js', 'js/views.js', 'js/app.js',
