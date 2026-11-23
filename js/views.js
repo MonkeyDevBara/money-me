@@ -1,4 +1,4 @@
-/* MoneyMe — tampilan (views) & aksi (handlers) */
+/* MoneyBos — tampilan (views) & aksi (handlers) */
 (function () {
   'use strict';
   const MM = window.MM, S = MM.S, V = MM.V, esc = MM.esc, rp = MM.rp, icon = MM.icon, $ = MM.$;
@@ -8,7 +8,7 @@
   V.rMonth = thisMonth(); V.catTab = 'expense';
 
   const WICONS = ['💵', '🏦', '💳', '📱', '👛', '🏧', '💰', '🪙', '🐷', '💼'];
-  const CICONS = ['🍜', '☕', '🚌', '⛽', '🛍️', '🧾', '🎬', '💊', '📚', '🏠', '👕', '🎮', '✈️', '🐾', '👶', '💡', '📞', '🎁', '💼', '🏪', '📈', '🎉', '💰', '📦'];
+  const CICONS = ['🍜', '☕', '🍿', '🍩', '🚌', '⛽', '🛍️', '🧾', '🎬', '💊', '📚', '🏠', '👕', '🎮', '✈️', '🐾', '👶', '💡', '📞', '🎁', '💼', '🏪', '📈', '🎉', '💰', '📦'];
   const PALETTE = ['#C9A227', '#E0533D', '#F2A541', '#3E7CC9', '#8E44AD', '#3FA7C6', '#D9578B', '#6FAE45', '#B5473A', '#4A6FA5', '#A06CC1', '#4DB6A4'];
 
   MM.short = (n) => {
@@ -65,7 +65,7 @@
     const step = V.onbStep || 1;
     const dots = '<div class="onb-dots" aria-label="Langkah ' + step + ' dari 2"><i class="' + (step === 1 ? 'on' : '') + '"></i><i class="' + (step === 2 ? 'on' : '') + '"></i></div>';
     if (step === 1) {
-      return '<div class="onb">' + dots + MM.logo(64) + '<h1>Selamat datang di <span>MoneyMe</span> 👋</h1>' +
+      return '<div class="onb">' + dots + MM.logo(64) + '<h1>Selamat datang di <span>MoneyBos</span> 👋</h1>' +
         '<p>Ngatur duit itu bukan soal pelit, tapi biar hidup lebih tenang. Nggak perlu ribet, nggak perlu sampai burnout. Konsisten dikit-dikit, biar cepet kaya! 🚀</p>' +
         '<ul class="onb-list">' +
         '<li><span>💸</span><div><b>Tahu uangmu lari ke mana</b><small>Nggak ada lagi drama "kok saldo udah tipis?" di akhir bulan.</small></div></li>' +
@@ -78,8 +78,8 @@
         '<button class="btn primary full big" data-act="onb-next">Lanjut</button>' +
         '<label class="link">Punya file backup? Pulihkan di sini<input type="file" accept=".json,application/json" hidden data-in="import"></label></div>';
     }
-    return '<div class="onb">' + dots + '<div class="onb-hero">💛</div><h1>Tentang <span>MoneyMe</span></h1>' +
-      '<p>MoneyMe adalah aplikasi manajemen keuangan pribadi yang <b>100% gratis</b>. Tanpa iklan, tanpa daftar akun, bisa dipakai offline, dan semua data tersimpan aman di HP kamu sendiri.</p>' +
+    return '<div class="onb">' + dots + '<div class="onb-hero">💛</div><h1>Tentang <span>MoneyBos</span></h1>' +
+      '<p>MoneyBos adalah aplikasi manajemen keuangan pribadi yang <b>100% gratis</b>. Tanpa iklan, tanpa daftar akun, bisa dipakai offline, dan semua data tersimpan aman di HP kamu sendiri.</p>' +
       '<div class="onb-pray"><span>🤲</span><p>Nggak perlu bayar apa-apa, cukup <b>doain yang bikin sehat terus</b> aja ya!</p></div>' +
       '<button class="btn primary full big" data-act="onb-start">Mulai Sekarang</button>' +
       '<button class="link" data-act="onb-back">Kembali</button></div>';
@@ -234,7 +234,7 @@
       '<div class="group"><h3>Data</h3><div class="card">' +
       link('#/backup', '🛡️', 'Backup &amp; Pulihkan', lb ? 'Terakhir ' + new Date(lb).toLocaleDateString('id-ID') : 'Belum pernah backup') +
       row('reset', '', '🗑️', '<span class="out">Hapus Semua Data</span>', 'Mulai dari awal', '') + '</div></div>' +
-      '<p class="about">' + MM.logo(28) + '<span><b>MoneyMe</b> v1.0<br>Data tersimpan hanya di perangkat ini, tanpa internet.</span></p>';
+      '<p class="about">' + MM.logo(28) + '<span><b>MoneyBos</b> v1.0<br>Data tersimpan hanya di perangkat ini, tanpa internet.</span></p>';
   }
 
   function vWallets() {
@@ -277,7 +277,7 @@
 
   function vBackup() {
     const lb = S.settings.lastBackup;
-    return '<div class="card pad info"><span>🛡️</span><p>Data MoneyMe <b>hanya tersimpan di perangkat ini</b>. Simpan file backup secara rutin (misalnya ke Google Drive atau WhatsApp ke diri sendiri) supaya data aman saat ganti HP atau data browser terhapus.</p></div>' +
+    return '<div class="card pad info"><span>🛡️</span><p>Data MoneyBos <b>hanya tersimpan di perangkat ini</b>. Simpan file backup secara rutin (misalnya ke Google Drive atau WhatsApp ke diri sendiri) supaya data aman saat ganti HP atau data browser terhapus.</p></div>' +
       '<p class="muted center">Backup terakhir: <b>' + (lb ? new Date(lb).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'belum pernah') + '</b></p>' +
       '<button class="btn primary full big" data-act="export">Simpan File Backup</button>' +
       '<label class="btn ghost full">Pulihkan dari File Backup<input type="file" accept=".json,application/json" hidden data-in="import"></label>' +
@@ -308,9 +308,10 @@
     }
     document.body.classList.remove('onboard');
     const r = route(), R = ROUTES[r];
+    const refreshBtn = '<button class="icon-btn refresh" data-act="refresh" aria-label="Muat ulang">' + icon('refresh') + '</button>';
     top.innerHTML = r === 'home'
-      ? '<div class="bar brand">' + MM.logo(34) + '<div>' + (S.settings.name ? '<h1>Halo, ' + esc(S.settings.name) + ' 👋</h1>' : '<h1>Money<span>Me</span></h1>') + '<small>' + MM.longDate() + '</small></div></div>'
-      : '<div class="bar">' + (R.back ? '<button class="icon-btn" data-act="back" aria-label="Kembali">' + icon('back') + '</button>' : '') + '<h1>' + esc(R.title) + '</h1></div>';
+      ? '<div class="bar brand">' + MM.logo(34) + '<div>' + (S.settings.name ? '<h1>Halo, ' + esc(S.settings.name) + ' 👋</h1>' : '<h1>Money<span>Bos</span></h1>') + '<small>' + MM.longDate() + '</small></div>' + refreshBtn + '</div>'
+      : '<div class="bar">' + (R.back ? '<button class="icon-btn" data-act="back" aria-label="Kembali">' + icon('back') + '</button>' : '') + '<h1>' + esc(R.title) + '</h1>' + refreshBtn + '</div>';
     view.innerHTML = R.view();
     nav.innerHTML = NAV.map(([k, ic, l]) => '<a href="#/' + k + '" class="' + (R.tab === k ? 'on' : '') + '"' + (R.tab === k ? ' aria-current="page"' : '') + '>' + icon(ic) + '<span>' + l + '</span></a>').join('');
     fab.innerHTML = ['home', 'history', 'report'].includes(r) ? '<button class="fab" data-act="tx-new" aria-label="Catat transaksi">' + icon('plus') + '</button>' : '';
@@ -415,7 +416,7 @@
     document.body.classList.add('noscroll');
     V.locked = true;
     MM.pinStart({
-      lock: true, title: 'Masukkan PIN', msg: 'MoneyMe terkunci',
+      lock: true, title: 'Masukkan PIN', msg: 'MoneyBos terkunci',
       onDone: async (p) => {
         if (Date.now() < blockedUntil) return MM.pinUpdate({ msg: 'Tunggu 30 detik lalu coba lagi', err: true }, true);
         if (await MM.checkPin(p)) {
@@ -435,6 +436,7 @@
 
   H['sheet-close'] = () => MM.closeSheet();
   H.back = () => { const R = ROUTES[route()]; if (V.navd) history.back(); else location.hash = '#/' + (R.parent || 'more'); };
+  H.refresh = () => MM.refresh();
   H['r-tab'] = (el) => { V.rTab = el.dataset.k; MM.render(); };
   H['cat-detail'] = (el) => { V.detailCat = el.dataset.id; location.hash = '#/catdetail'; };
   H['m-shift'] = (el) => { const k = el.dataset.k; V[k + 'Month'] = MM.shiftMonth(V[k + 'Month'], +el.dataset.d); V.hLimit = 100; MM.render(); };
@@ -467,28 +469,28 @@
     if (tab === 'android') {
       if (V.bip) h += '<button class="btn primary full big" data-act="install-now">' + icon('addsq') + ' Pasang Sekarang</button><p class="hint center">Sekali ketuk, langsung terpasang. Atau ikuti cara manual di bawah:</p>';
       h += steps([
-        'Buka MoneyMe di <b>Google Chrome</b>.',
+        'Buka MoneyBos di <b>Google Chrome</b>.',
         'Ketuk tombol menu ' + kbd('dots') + ' di pojok <b>kanan atas</b>.',
         'Pilih <b>"Tambahkan ke layar utama"</b> atau <b>"Instal aplikasi"</b>.',
         'Ketuk <b>"Instal"</b> / <b>"Tambah"</b> untuk konfirmasi.',
-        'Selesai! Buka MoneyMe dari ikon ' + MM.logo(20) + ' di layar utama HP kamu.'
+        'Selesai! Buka MoneyBos dari ikon ' + MM.logo(20) + ' di layar utama HP kamu.'
       ]) + '<p class="hint">Pakai Samsung Internet? Ketuk menu <b>≡</b> → <b>Tambahkan halaman ke</b> → <b>Layar Utama</b>.</p>';
     } else {
       h += steps([
-        'Buka MoneyMe di <b>Safari</b> (browser bawaan iPhone).',
+        'Buka MoneyBos di <b>Safari</b> (browser bawaan iPhone).',
         'Ketuk tombol <b>Bagikan</b> ' + kbd('share') + ' di bagian <b>bawah</b> layar.',
         'Geser ke bawah, lalu pilih ' + kbd('addsq', 'Tambah ke Layar Utama') + '.',
         'Ketuk <b>"Tambah"</b> di pojok kanan atas.',
-        'Selesai! Buka MoneyMe dari ikon ' + MM.logo(20) + ' di layar utama iPhone kamu.'
+        'Selesai! Buka MoneyBos dari ikon ' + MM.logo(20) + ' di layar utama iPhone kamu.'
       ]) + '<p class="hint">Pakai Chrome di iPhone? Ketuk ' + kbd('share') + ' di kanan atas kolom alamat, lalu pilih <b>Tambah ke Layar Utama</b>.</p>';
     }
     return h;
   }
   function installSheet(first) {
-    const intro = '<div class="inst-intro"><span>📲</span><div><b>MoneyMe adalah web app</b><small>Nggak perlu download di Play Store atau App Store. Cukup pasang ke layar utama, ' +
+    const intro = '<div class="inst-intro"><span>📲</span><div><b>MoneyBos adalah web app</b><small>Nggak perlu download di Play Store atau App Store. Cukup pasang ke layar utama, ' +
       'nanti bisa dibuka kayak aplikasi biasa, bahkan tanpa internet.</small></div></div>';
     MM.openSheet(MM.sheetHead(first ? 'Satu langkah lagi! 🎉' : 'Pasang di Layar Utama') + intro +
-      (MM.isInstalled() ? '<div class="empty"><span>✅</span><p>MoneyMe sudah terpasang di layar utama perangkat ini.</p></div>' : '<div id="inst-body">' + installBody() + '</div>') +
+      (MM.isInstalled() ? '<div class="empty"><span>✅</span><p>MoneyBos sudah terpasang di layar utama perangkat ini.</p></div>' : '<div id="inst-body">' + installBody() + '</div>') +
       '<button class="btn ' + (first ? 'ghost' : 'primary') + ' full" data-act="sheet-close">' + (first ? 'Nanti saja' : 'Oke, mengerti') + '</button>');
   }
   H['install-open'] = () => installSheet(false);
@@ -499,7 +501,7 @@
     V.bip = null;
     e.prompt();
     const r = await e.userChoice.catch(() => ({}));
-    if (r.outcome === 'accepted') { MM.closeSheet(); MM.toast('MoneyMe sedang dipasang 🎉'); }
+    if (r.outcome === 'accepted') { MM.closeSheet(); MM.toast('MoneyBos sedang dipasang 🎉'); }
     else { const b = $('#inst-body'); if (b) b.innerHTML = installBody(); }
   };
 
@@ -653,7 +655,7 @@
         }
       });
     }
-    if (!(await MM.confirm({ title: 'Aktifkan Kunci PIN?', msg: 'PIN 4 angka akan diminta setiap membuka MoneyMe. Jika lupa PIN, satu-satunya cara adalah menghapus semua data, jadi pastikan sudah backup.', ok: 'Lanjut' }))) return;
+    if (!(await MM.confirm({ title: 'Aktifkan Kunci PIN?', msg: 'PIN 4 angka akan diminta setiap membuka MoneyBos. Jika lupa PIN, satu-satunya cara adalah menghapus semua data, jadi pastikan sudah backup.', ok: 'Lanjut' }))) return;
     let first = null;
     MM.openSheet(MM.sheetHead('Buat Kunci PIN') + MM.pinPad());
     MM.pinStart({
@@ -668,7 +670,7 @@
   H['pin-key'] = (el) => MM.pinKey(el.dataset.k);
   H['pin-del'] = () => MM.pinDel();
   H['pin-forgot'] = async () => {
-    if (!(await MM.confirm({ title: 'Lupa PIN?', msg: 'Satu-satunya cara adalah menghapus SEMUA data MoneyMe di perangkat ini, lalu mulai dari awal (atau pulihkan dari file backup). Lanjutkan?', ok: 'Hapus semua data', danger: true }))) return;
+    if (!(await MM.confirm({ title: 'Lupa PIN?', msg: 'Satu-satunya cara adalah menghapus SEMUA data MoneyBos di perangkat ini, lalu mulai dari awal (atau pulihkan dari file backup). Lanjutkan?', ok: 'Hapus semua data', danger: true }))) return;
     await MM.resetAll();
     location.hash = '';
     location.reload();
@@ -681,7 +683,7 @@
   };
 
   H.export = async () => {
-    const name = 'moneyme-backup-' + MM.today() + '.json';
+    const name = 'moneybos-backup-' + MM.today() + '.json';
     const blob = new Blob([JSON.stringify(MM.exportData())], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -726,7 +728,7 @@
     el.value = '';
     if (!f) return;
     let d;
-    try { d = JSON.parse(await f.text()); } catch (e) { return MM.confirm({ title: 'Gagal membaca file', msg: 'File ini bukan file backup MoneyMe yang valid.', ok: 'OK', cancel: '' }); }
+    try { d = JSON.parse(await f.text()); } catch (e) { return MM.confirm({ title: 'Gagal membaca file', msg: 'File ini bukan file backup MoneyBos yang valid.', ok: 'OK', cancel: '' }); }
     const err = MM.validateBackup(d);
     if (err) return MM.confirm({ title: 'Tidak bisa dipulihkan', msg: err, ok: 'OK', cancel: '' });
     const n = d.transactions.length;
