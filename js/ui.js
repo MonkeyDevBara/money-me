@@ -1,4 +1,4 @@
-/* MoneyMe — komponen UI: ikon, sheet, dialog, toast, grafik, PIN pad */
+/* MoneyBos — komponen UI: ikon, sheet, dialog, toast, grafik, PIN pad */
 (function () {
   'use strict';
   const MM = window.MM, esc = MM.esc;
@@ -20,7 +20,8 @@
     lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     share: '<path d="M12 3v12M8 7l4-4 4 4"/><path d="M7 10H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1"/>',
     dots: '<circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/>',
-    addsq: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/>'
+    addsq: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/>',
+    refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>'
   };
   MM.icon = (n) => '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + P[n] + '</svg>';
   MM.logo = (size = 36) => '<svg width="' + size + '" height="' + size + '" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E2C35A"/><stop offset="1" stop-color="#A9830F"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#lg)"/><path d="M16 46V20l16 15 16-15v26" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -60,6 +61,30 @@
     t.classList.add('show');
     clearTimeout(tt);
     tt = setTimeout(() => t.classList.remove('show'), 2200);
+  };
+
+  /* ---------- muat ulang: cek versi baru lalu reload ---------- */
+  // Aplikasi cache-first, jadi reload biasa menampilkan aset lama. Minta service worker
+  // memeriksa sw.js; kalau ada versi baru, tunggu aktif (aset di-cache ulang) baru reload.
+  let refreshing = false;
+  MM.refresh = async () => {
+    if (refreshing) return;
+    refreshing = true;
+    document.body.classList.add('refreshing');
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    try {
+      if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) {
+          await Promise.race([reg.update(), wait(8000)]);
+          const w = reg.installing || reg.waiting;
+          if (w && w.state !== 'activated') {
+            await Promise.race([new Promise((r) => w.addEventListener('statechange', () => { if (w.state === 'activated' || w.state === 'redundant') r(); })), wait(10000)]);
+          }
+        }
+      }
+    } catch (e) { /* offline: tetap reload dari cache */ }
+    location.reload();
   };
 
   /* ---------- grafik ---------- */
